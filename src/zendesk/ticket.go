@@ -2,7 +2,6 @@ package zendesk
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -95,7 +94,6 @@ func (c *Client) GetTicketStats() (map[string]float64, error) {
 	m := make(map[string]float64)
 
 	list, err := c.getTickets()
-	fmt.Println("Debug: List Ticket Receive")
 	if err != nil {
 		return map[string]float64{}, err
 	}
