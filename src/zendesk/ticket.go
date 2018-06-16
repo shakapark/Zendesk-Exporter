@@ -1,6 +1,11 @@
 package zendesk
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"time"
+)
 
 type ticket struct {
 	ID                  int64       `json:"id,omitempty"`
@@ -10,7 +15,7 @@ type ticket struct {
 	Subject             string      `json:"subject,omitempty"`
 	RawSubject          string      `json:"raw_subject,omitempty"`
 	Description         string      `json:"description,omitempty"`
-	Priority            string      `json:"priority,omitempty`
+	Priority            string      `json:"priority,omitempty"`
 	Status              string      `json:"status,omitempty"`
 	Recipient           string      `json:"recipient,omitempty"`
 	RequesterID         int64       `json:"requester_id"`
@@ -29,7 +34,7 @@ type ticket struct {
 	Via                 interface{} `json:"via,omitempty"`
 	CustomFields        []string    `json:"custom_fileds,omitempty"`
 	SatisfactionRating  interface{} `json:"satisfaction_rating,omitempty"`
-	SharingAgreementIDs []int64     `json:"sharing_agreement_ids",omitempty"`
+	SharingAgreementIDs []int64     `json:"sharing_agreement_ids,omitempty"`
 	FollowupIDs         []int64     `json:"followup_ids,omitempty"`
 	ViaFollowupSourceID int64       `json:"via_followup_source_id,omitempty"`
 	MacroIds            []int64     `json:"macro_ids,omitempty"`
@@ -42,7 +47,64 @@ type ticket struct {
 	UpdatedAt           *time.Time  `json:"updated_at,omitempty"`
 }
 
-func getTickets() []ticket {
-	//TODO
-	return
+//Tickets Object get by api
+type Tickets struct {
+	List     []ticket `json:"tickets"`
+	Next     string   `json:"next_page"`
+	Previous string   `json:"previous_page"`
+	Count    int64    `json:"count"`
+}
+
+func (c *Client) getTickets() ([]ticket, error) {
+	var tickets Tickets
+	var list []ticket
+
+	i := 1
+	for {
+		body, err := c.Get("/tickets.json?page=" + strconv.Itoa(i))
+		if err != nil {
+			return []ticket{}, err
+		}
+
+		err = json.Unmarshal(body, &tickets)
+		if err != nil {
+			return []ticket{}, err
+		}
+
+		for _, t := range tickets.List {
+			list = append(list, t)
+		}
+
+		if tickets.Next == "" {
+			break
+		}
+
+		tickets = Tickets{
+			List:     []ticket{},
+			Next:     "",
+			Previous: "",
+			Count:    0,
+		}
+		i++
+	}
+	return list, nil
+}
+
+//GetTicketStats Return statistics of all tickets in a map
+func (c *Client) GetTicketStats() (map[string]float64, error) {
+	m := make(map[string]float64)
+
+	list, err := c.getTickets()
+	fmt.Println("Debug: List Ticket Receive")
+	if err != nil {
+		return map[string]float64{}, err
+	}
+
+	m["count"] = float64(len(list))
+
+	for _, t := range list {
+		m[t.Status]++
+	}
+
+	return m, nil
 }

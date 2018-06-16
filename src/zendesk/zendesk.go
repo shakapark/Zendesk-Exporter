@@ -58,25 +58,25 @@ func NewClientByToken(baseURL, userAgent, token string) (*Client, error) {
 }
 
 //Get Get Request to Url
-func (c *Client) Get(path string) (string, error) {
+func (c *Client) Get(path string) ([]byte, error) {
 	req, err := http.NewRequest("GET", c.baseURL+path, nil)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 	req.Header.Add("Authorization", "Basic "+c.credential)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Bad response from api")
+		return []byte{}, fmt.Errorf("Bad response from api")
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
-	return string(body), nil
+	return body, nil
 }
