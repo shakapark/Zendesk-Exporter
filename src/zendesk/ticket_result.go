@@ -23,6 +23,7 @@ func NewResultTicket() *ResultTicket {
 		"rule":    0,
 		"system":  0,
 		"twitter": 0,
+		"email":   0,
 	}
 	return &ResultTicket{
 		count:  0,
