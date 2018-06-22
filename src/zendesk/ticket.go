@@ -90,19 +90,21 @@ func (c *Client) getTickets() ([]ticket, error) {
 }
 
 //GetTicketStats Return statistics of all tickets in a map
-func (c *Client) GetTicketStats() (map[string]float64, error) {
-	m := make(map[string]float64)
+func (c *Client) GetTicketStats() (*ResultTicket, error) {
+	rt := NewResultTicket()
 
 	list, err := c.getTickets()
 	if err != nil {
-		return map[string]float64{}, err
+		return nil, err
 	}
 
-	m["count"] = float64(len(list))
+	rt.SetCount(float64(len(list)))
 
+	status := rt.GetStatus()
 	for _, t := range list {
-		m[t.Status]++
+		status[t.Status]++
 	}
+	rt.SetStatus(status)
 
-	return m, nil
+	return rt, nil
 }
