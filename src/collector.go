@@ -35,4 +35,14 @@ func (c collector) Collect(ch chan<- prometheus.Metric) {
 			value,
 			key)
 	}
+
+	v := rt.GetVia()
+	for key, value := range v {
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc("zendesk_ticket_channel", "Tickets Channel Statistics", []string{"channel"}, nil),
+			prometheus.GaugeValue,
+			value,
+			key)
+	}
+
 }
