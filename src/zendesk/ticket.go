@@ -2,9 +2,15 @@ package zendesk
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 )
+
+type via struct {
+	Channel string      `json:"channel"`
+	Source  interface{} `json:"source"`
+}
 
 type ticket struct {
 	ID                  int64       `json:"id,omitempty"`
@@ -30,7 +36,7 @@ type ticket struct {
 	HasIncidents        bool        `json:"has_incidents,omitempty"`
 	DueAt               *time.Time  `json:"due_at,omitempty"`
 	Tags                []string    `json:"tags,omitempty"`
-	Via                 interface{} `json:"via,omitempty"`
+	Via                 via         `json:"via,omitempty"`
 	CustomFields        []string    `json:"custom_fileds,omitempty"`
 	SatisfactionRating  interface{} `json:"satisfaction_rating,omitempty"`
 	SharingAgreementIDs []int64     `json:"sharing_agreement_ids,omitempty"`
@@ -105,6 +111,16 @@ func (c *Client) GetTicketStats() (*ResultTicket, error) {
 		status[t.Status]++
 	}
 	rt.SetStatus(status)
+
+	via := rt.GetVia()
+	for _, t := range list {
+		if _, ok := via[t.Via.Channel]; ok {
+			via[t.Via.Channel]++
+		} else {
+			fmt.Println("Error:", t.Via.Channel, "channel is not know")
+		}
+	}
+	rt.SetVia(via)
 
 	return rt, nil
 }
