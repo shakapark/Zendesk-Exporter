@@ -16,25 +16,23 @@ func (c collector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c collector) Collect(ch chan<- prometheus.Metric) {
 
-	m, err := c.zenClient.GetTicketStats()
+	rt, err := c.zenClient.GetTicketStats()
 	if err != nil {
 		log.Errorln(err)
 		return
 	}
 
+	ch <- prometheus.MustNewConstMetric(
+		prometheus.NewDesc("zendesk_ticket_count", "Tickets Number", nil, nil),
+		prometheus.GaugeValue,
+		rt.GetCount())
+
+	m := rt.GetStatus()
 	for key, value := range m {
-		if key == "count" {
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc("zendesk_ticket_count", "Tickets Number", []string{"status"}, nil),
-				prometheus.GaugeValue,
-				value,
-				key)
-		} else {
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc("zendesk_ticket", "Tickets Statistics", []string{"status"}, nil),
-				prometheus.GaugeValue,
-				value,
-				key)
-		}
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc("zendesk_ticket", "Tickets Statistics", []string{"status"}, nil),
+			prometheus.GaugeValue,
+			value,
+			key)
 	}
 }
