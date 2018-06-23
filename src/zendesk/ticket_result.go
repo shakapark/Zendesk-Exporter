@@ -3,19 +3,26 @@ package zendesk
 //ResultTicket Stock result
 type ResultTicket struct {
 	count  float64
-	status map[string]float64
+	status map[string]map[string]float64
 	via    map[string]float64
 }
 
 //NewResultTicket Create new ResultTicket
 func NewResultTicket() *ResultTicket {
-	emptyStatus := map[string]float64{
-		"new":     0,
-		"open":    0,
-		"pending": 0,
-		"hold":    0,
-		"solved":  0,
-		"closed":  0,
+	emptyPriority := map[string]float64{
+		"urgent":    0,
+		"high":      0,
+		"normal":    0,
+		"low":       0,
+		"undefined": 0,
+	}
+	emptyStatus := map[string]map[string]float64{
+		"new":     emptyPriority,
+		"open":    emptyPriority,
+		"pending": emptyPriority,
+		"hold":    emptyPriority,
+		"solved":  emptyPriority,
+		"closed":  emptyPriority,
 	}
 	emptyVia := map[string]float64{
 		"web":     0,
@@ -43,12 +50,12 @@ func (rt *ResultTicket) GetCount() float64 {
 }
 
 //SetStatus Set number of ticket by status
-func (rt *ResultTicket) SetStatus(m map[string]float64) {
+func (rt *ResultTicket) SetStatus(m map[string]map[string]float64) {
 	rt.status = m
 }
 
 //GetStatus Get number of ticket by status
-func (rt *ResultTicket) GetStatus() map[string]float64 {
+func (rt *ResultTicket) GetStatus() map[string]map[string]float64 {
 	return rt.status
 }
 

@@ -107,8 +107,15 @@ func (c *Client) GetTicketStats() (*ResultTicket, error) {
 	rt.SetCount(float64(len(list)))
 
 	status := rt.GetStatus()
+	fmt.Println("Debug: ", status)
 	for _, t := range list {
-		status[t.Status]++
+		if t.Priority == "" {
+			status[t.Status]["undefined"]++
+			fmt.Println("Debug: ", status)
+		} else {
+			status[t.Status][t.Priority]++
+			fmt.Println("Debug: ", status)
+		}
 	}
 	rt.SetStatus(status)
 

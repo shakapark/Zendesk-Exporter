@@ -28,12 +28,14 @@ func (c collector) Collect(ch chan<- prometheus.Metric) {
 		rt.GetCount())
 
 	m := rt.GetStatus()
-	for key, value := range m {
-		ch <- prometheus.MustNewConstMetric(
-			prometheus.NewDesc("zendesk_ticket", "Tickets Statistics", []string{"status"}, nil),
-			prometheus.GaugeValue,
-			value,
-			key)
+	for status, mp := range m {
+		for priority, value := range mp {
+			ch <- prometheus.MustNewConstMetric(
+				prometheus.NewDesc("zendesk_ticket", "Tickets Statistics", []string{"status", "priority"}, nil),
+				prometheus.GaugeValue,
+				value,
+				status, priority)
+		}
 	}
 
 	v := rt.GetVia()
