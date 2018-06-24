@@ -1,10 +1,11 @@
-url: "base-url" ## https://base-url.zendesk.com
-login: "user-email"
-password: "user password"
-#OR
-token: "user token api" 
-
+zendesk:
+  url: "base-url" ## https://base-url.zendesk.com
+  login: "user-email"
+  password: "user password"
+  #OR
+  token: "user token api" 
 # If both of password and token are present, token will be use
+
 filter:
   priority: true
   status: true
