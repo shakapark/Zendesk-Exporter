@@ -56,13 +56,13 @@ func main() {
 		log.Fatal("Error: ", err)
 	}
 
-	log.Infoln("Msg", "Starting Zendesk-Exporter")
+	log.Infoln("Starting Zendesk-Exporter")
 
 	if err := sc.ReloadConfig(*configFile); err != nil {
-		log.Fatal("Error loading config", err)
+		log.Fatal("Error loading config: ", err)
 		os.Exit(1)
 	}
-	log.Infoln("Msg", "Loaded config file")
+	log.Infoln("Loaded config file")
 	sc.Lock()
 	conf := sc.C
 	sc.Unlock()
@@ -76,16 +76,16 @@ func main() {
 			select {
 			case <-hup:
 				if err := sc.ReloadConfig(*configFile); err != nil {
-					log.Infoln("Msg", "Error reloading config", "err", err)
+					log.Errorln("Error reloading config:", err)
 					continue
 				}
-				log.Infoln("Msg", "Reloaded config file")
+				log.Infoln("Reloaded config file")
 			case rc := <-reloadCh:
 				if err := sc.ReloadConfig(*configFile); err != nil {
-					log.Infoln("Msg", "Error reloading config", "err", err)
+					log.Errorln("Error reloading config:", err)
 					rc <- err
 				} else {
-					log.Infoln("Msg", "Reloaded config file")
+					log.Infoln("Reloaded config file")
 					rc <- nil
 				}
 			}
@@ -137,9 +137,9 @@ func main() {
 			</html>`))
 	})
 
-	log.Infoln("msg", "Listening on", "address", *listenAddress)
+	log.Infoln("Listening on:", *listenAddress)
 	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
-		log.Fatal("msg", "Error starting HTTP server", "err", err)
+		log.Fatal("Error: Can't starting HTTP server: ", err)
 		os.Exit(1)
 	}
 	m, err := zen.GetTicketStats()
