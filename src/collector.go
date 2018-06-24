@@ -18,7 +18,13 @@ func (c collector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c collector) Collect(ch chan<- prometheus.Metric) {
 
-	rt, err := c.zenClient.GetTicketStats()
+	atf, err := c.zenClient.SetAllTicketField()
+	if err != nil {
+		log.Errorln(err)
+		return
+	}
+
+	rt, err := c.zenClient.GetTicketStats(atf, c.filter.CustomFields)
 	if err != nil {
 		log.Errorln(err)
 		return

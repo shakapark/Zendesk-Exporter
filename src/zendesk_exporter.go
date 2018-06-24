@@ -145,10 +145,4 @@ func main() {
 		log.Fatal("Error: Can't starting HTTP server: ", err)
 		os.Exit(1)
 	}
-	m, err := zen.GetTicketStats()
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(m)
-	}
 }

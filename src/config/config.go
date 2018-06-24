@@ -39,8 +39,8 @@ type Filter struct {
 
 //CustomFields Represent the filter use in this exporter
 type CustomFields struct {
-	Enable bool     `yaml:"enable"`
-	Fields []string `yaml:"fields"`
+	Enable bool                `yaml:"enable"`
+	Fields map[string][]string `yaml:"fields"`
 
 	XXX map[string]interface{} `yaml:",inline"`
 }

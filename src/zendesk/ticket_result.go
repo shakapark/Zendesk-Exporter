@@ -2,6 +2,7 @@ package zendesk
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -28,6 +29,29 @@ func getEmptyGlobal() []Global {
 		}
 	}
 
+	return t
+}
+
+func getEmptyGlobalWithCustomField(m map[string][]string) []Global {
+	t := make([]Global, 0)
+
+	for _, p := range listPriority {
+		for _, s := range listStatus {
+			for _, v := range listVia {
+				labels := map[string]string{
+					"priority": p,
+					"status":   s,
+					"via":      v,
+				}
+				t = append(t, Global{
+					Labels: labels,
+					Count:  0,
+				})
+			}
+		}
+	}
+
+	fmt.Println("Debug: ", t)
 	return t
 }
 
