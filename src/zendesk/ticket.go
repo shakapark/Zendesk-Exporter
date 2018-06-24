@@ -2,7 +2,7 @@ package zendesk
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"strconv"
 	"time"
 )
@@ -106,28 +106,50 @@ func (c *Client) GetTicketStats() (*ResultTicket, error) {
 
 	rt.SetCount(float64(len(list)))
 
+	global := rt.GetGlobals()
+	priority := rt.GetPriority()
 	status := rt.GetStatus()
-	fmt.Println("Debug: ", status)
+	via := rt.GetVia()
+
 	for _, t := range list {
 		if t.Priority == "" {
-			status[t.Status]["undefined"]++
-			fmt.Println("Debug: ", status)
-		} else {
-			status[t.Status][t.Priority]++
-			fmt.Println("Debug: ", status)
+			t.Priority = "undefined"
 		}
-	}
-	rt.SetStatus(status)
+		//Set Global
+		g, k, err := GetGlobal(global, map[string]string{
+			"priority": t.Priority,
+			"status":   t.Status,
+			"via":      t.Via.Channel,
+		})
+		if err != nil {
+			return nil, err
+		}
+		g.Count++
+		(*global)[k] = *g
 
-	via := rt.GetVia()
-	for _, t := range list {
+		//Set Priority
+		if _, ok := priority[t.Priority]; ok {
+			priority[t.Priority]++
+		} else if t.Priority == "" {
+			priority["undefined"]++
+		} else {
+			return nil, errors.New("Error: " + t.Priority + " priority is not know")
+		}
+
+		//Set Status
+		if _, ok := status[t.Status]; ok {
+			status[t.Status]++
+		} else {
+			return nil, errors.New("Error: " + t.Status + " status is not know")
+		}
+
+		//Set Via
 		if _, ok := via[t.Via.Channel]; ok {
 			via[t.Via.Channel]++
 		} else {
-			fmt.Println("Error:", t.Via.Channel, "channel is not know")
+			return nil, errors.New("Error: " + t.Via.Channel + " channel is not know")
 		}
 	}
-	rt.SetVia(via)
 
 	return rt, nil
 }
