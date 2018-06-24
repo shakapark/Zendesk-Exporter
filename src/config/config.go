@@ -11,10 +11,36 @@ import (
 
 //Config Represent the Yaml config of Zendesk-Exporter
 type Config struct {
+	Zendesk Zendesk `yaml:"zendesk"`
+	Filter  Filter  `yaml:"filter"`
+
+	XXX map[string]interface{} `yaml:",inline"`
+}
+
+//Zendesk Represent the credentials to connect to Zendesk
+type Zendesk struct {
 	URL      string `yaml:"url"`
 	Login    string `yaml:"login"`
 	Password string `yaml:"password"`
 	Token    string `yaml:"token"`
+
+	XXX map[string]interface{} `yaml:",inline"`
+}
+
+//Filter Represent the filter use in this exporter
+type Filter struct {
+	Priority     bool         `yaml:"priority"`
+	Status       bool         `yaml:"status"`
+	Channel      bool         `yaml:"channel"`
+	CustomFields CustomFields `yaml:"custom_fields"`
+
+	XXX map[string]interface{} `yaml:",inline"`
+}
+
+//CustomFields Represent the filter use in this exporter
+type CustomFields struct {
+	Enable bool     `yaml:"enable"`
+	Fields []string `yaml:"fields"`
 
 	XXX map[string]interface{} `yaml:",inline"`
 }
@@ -37,6 +63,42 @@ func (s *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 	if err := checkOverflow(s.XXX, "config"); err != nil {
+		return err
+	}
+	return nil
+}
+
+//UnmarshalYAML Decoding yaml zendesk part
+func (s *Zendesk) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type plain Zendesk
+	if err := unmarshal((*plain)(s)); err != nil {
+		return err
+	}
+	if err := checkOverflow(s.XXX, "zendesk"); err != nil {
+		return err
+	}
+	return nil
+}
+
+//UnmarshalYAML Decoding yaml filter part
+func (s *Filter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type plain Filter
+	if err := unmarshal((*plain)(s)); err != nil {
+		return err
+	}
+	if err := checkOverflow(s.XXX, "filter"); err != nil {
+		return err
+	}
+	return nil
+}
+
+//UnmarshalYAML Decoding yaml custom field part
+func (s *CustomFields) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type plain CustomFields
+	if err := unmarshal((*plain)(s)); err != nil {
+		return err
+	}
+	if err := checkOverflow(s.XXX, "custom_fields"); err != nil {
 		return err
 	}
 	return nil

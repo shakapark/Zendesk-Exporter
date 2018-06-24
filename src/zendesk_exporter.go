@@ -32,16 +32,16 @@ func init() {
 	prometheus.MustRegister(version.NewCollector("zendesk_exporter"))
 }
 
-func setZendeskClient(c *config.Config) (*zendesk.Client, error) {
-	if c.Token != "" {
-		return zendesk.NewClientByToken(c.URL, c.Login, c.Token)
+func setZendeskClient(z *config.Zendesk) (*zendesk.Client, error) {
+	if z.Token != "" {
+		return zendesk.NewClientByToken(z.URL, z.Login, z.Token)
 	}
-	return zendesk.NewClientByPassword(c.URL, c.Login, c.Password)
+	return zendesk.NewClientByPassword(z.URL, z.Login, z.Password)
 }
 
-func zendeskHandler(w http.ResponseWriter, r *http.Request, z *zendesk.Client) {
+func zendeskHandler(w http.ResponseWriter, r *http.Request, z *zendesk.Client, f *config.Filter) {
 	registry := prometheus.NewRegistry()
-	collector := collector{zenClient: z}
+	collector := collector{zenClient: z, filter: f}
 	registry.MustRegister(collector)
 
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
@@ -92,7 +92,7 @@ func main() {
 		}
 	}()
 
-	zen, err := setZendeskClient(conf)
+	zen, err := setZendeskClient(&conf.Zendesk)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -110,7 +110,7 @@ func main() {
 			http.Error(w, fmt.Sprintf("Failed to reload config: %s", err), http.StatusInternalServerError)
 			return
 		}
-		tmp, err := setZendeskClient(conf)
+		tmp, err := setZendeskClient(&conf.Zendesk)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to reload config: %s", err), http.StatusInternalServerError)
 			return
@@ -120,7 +120,10 @@ func main() {
 
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/zendesk", func(w http.ResponseWriter, r *http.Request) {
-		zendeskHandler(w, r, zen)
+		sc.Lock()
+		conf := sc.C
+		sc.Unlock()
+		zendeskHandler(w, r, zen, &conf.Filter)
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
