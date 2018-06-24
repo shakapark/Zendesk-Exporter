@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Zendesk-Exporter/src/config"
 	"Zendesk-Exporter/src/zendesk"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -8,6 +9,7 @@ import (
 
 type collector struct {
 	zenClient *zendesk.Client
+	filter    *config.Filter
 }
 
 func (c collector) Describe(ch chan<- *prometheus.Desc) {
@@ -37,31 +39,37 @@ func (c collector) Collect(ch chan<- prometheus.Metric) {
 			g.Labels["priority"], g.Labels["status"], g.Labels["via"])
 	}
 
-	p := rt.GetPriority()
-	for priority, value := range p {
-		ch <- prometheus.MustNewConstMetric(
-			prometheus.NewDesc("zendesk_ticket_priority", "Tickets Priority Statistics", []string{"priority"}, nil),
-			prometheus.GaugeValue,
-			value,
-			priority)
+	if c.filter.Priority {
+		p := rt.GetPriority()
+		for priority, value := range p {
+			ch <- prometheus.MustNewConstMetric(
+				prometheus.NewDesc("zendesk_ticket_priority", "Tickets Priority Statistics", []string{"priority"}, nil),
+				prometheus.GaugeValue,
+				value,
+				priority)
+		}
 	}
 
-	s := rt.GetStatus()
-	for status, value := range s {
-		ch <- prometheus.MustNewConstMetric(
-			prometheus.NewDesc("zendesk_ticket_status", "Tickets Status Statistics", []string{"status"}, nil),
-			prometheus.GaugeValue,
-			value,
-			status)
+	if c.filter.Status {
+		s := rt.GetStatus()
+		for status, value := range s {
+			ch <- prometheus.MustNewConstMetric(
+				prometheus.NewDesc("zendesk_ticket_status", "Tickets Status Statistics", []string{"status"}, nil),
+				prometheus.GaugeValue,
+				value,
+				status)
+		}
 	}
 
-	v := rt.GetVia()
-	for key, value := range v {
-		ch <- prometheus.MustNewConstMetric(
-			prometheus.NewDesc("zendesk_ticket_channel", "Tickets Channel Statistics", []string{"channel"}, nil),
-			prometheus.GaugeValue,
-			value,
-			key)
+	if c.filter.Channel {
+		v := rt.GetVia()
+		for key, value := range v {
+			ch <- prometheus.MustNewConstMetric(
+				prometheus.NewDesc("zendesk_ticket_channel", "Tickets Channel Statistics", []string{"channel"}, nil),
+				prometheus.GaugeValue,
+				value,
+				key)
+		}
 	}
 
 }
