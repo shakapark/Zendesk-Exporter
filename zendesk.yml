@@ -5,3 +5,11 @@ password: "user password"
 token: "user token api" 
 
 # If both of password and token are present, token will be use
+filter:
+  priority: true
+  status: true
+  channel: true
+  custom_fields:
+    enable: false
+    fields:
+      - "your_custom_field"
