@@ -8,11 +8,6 @@ var (
 	listPriority = []string{"urgent", "high", "normal", "low", "undefined"}
 	listStatus   = []string{"new", "open", "pending", "hold", "solved", "closed"}
 	listVia      = []string{"web", "mobile", "rule", "system", "twitter", "email"}
-
-	emptyGlobal   = getEmptyGlobal()
-	emptyPriority = getEmptyPriority()
-	emptyStatus   = getEmptyStatus()
-	emptyVia      = getEmptyVia()
 )
 
 func getEmptyGlobal() []Global {
@@ -99,10 +94,10 @@ type ResultTicket struct {
 func NewResultTicket() *ResultTicket {
 	return &ResultTicket{
 		count:    0,
-		global:   emptyGlobal,
-		priority: emptyPriority,
-		status:   emptyStatus,
-		via:      emptyVia,
+		global:   getEmptyGlobal(),
+		priority: getEmptyPriority(),
+		status:   getEmptyStatus(),
+		via:      getEmptyVia(),
 	}
 }
 
