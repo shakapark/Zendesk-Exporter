@@ -118,10 +118,7 @@ func (c *Client) getTickets(allTicketField []TicketField) ([]ticket, error) {
 
 //GetTicketStats Return statistics of all tickets in a map
 func (c *Client) GetTicketStats(allTicketField []TicketField, cfs config.CustomFields) (*ResultTicket, error) {
-	getEmptyGlobalWithCustomField(cfs.Fields)
-	return nil, nil
-
-	rt := NewResultTicket()
+	rt := NewResultTicket(cfs.Fields)
 
 	list, err := c.getTickets(allTicketField)
 	if err != nil {

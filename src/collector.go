@@ -35,6 +35,7 @@ func (c collector) Collect(ch chan<- prometheus.Metric) {
 		prometheus.GaugeValue,
 		rt.GetCount())
 
+	//Fix It (Missing CustomFields)
 	gs := rt.GetGlobals()
 	for _, g := range *gs {
 		ch <- prometheus.MustNewConstMetric(

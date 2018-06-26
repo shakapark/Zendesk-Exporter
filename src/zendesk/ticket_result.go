@@ -1,7 +1,6 @@
 package zendesk
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -11,6 +10,7 @@ var (
 	listVia      = []string{"web", "mobile", "rule", "system", "twitter", "email", "chat"}
 )
 
+//Deprecated
 func getEmptyGlobal() []Global {
 	t := make([]Global, 0)
 
@@ -32,6 +32,41 @@ func getEmptyGlobal() []Global {
 	return t
 }
 
+func addCustomField(t []Global, labels map[string]string, m map[string][]string) []Global {
+	var last bool
+	if len(m) == 1 {
+		last = true
+	} else {
+		last = false
+	}
+
+	tmp := make(map[string][]string)
+	for key := range m {
+		tmp[key] = m[key]
+	}
+
+	for key, values := range tmp {
+		delete(tmp, key)
+		for _, value := range values {
+			labels[key] = value
+			tmp2 := make(map[string]string)
+			for key := range labels {
+				tmp2[key] = labels[key]
+			}
+			if last {
+				t = append(t, Global{
+					Labels: tmp2,
+					Count:  0,
+				})
+			} else {
+				t = addCustomField(t, tmp2, tmp)
+			}
+		}
+		break
+	}
+	return t
+}
+
 func getEmptyGlobalWithCustomField(m map[string][]string) []Global {
 	t := make([]Global, 0)
 
@@ -43,15 +78,17 @@ func getEmptyGlobalWithCustomField(m map[string][]string) []Global {
 					"status":   s,
 					"via":      v,
 				}
-				t = append(t, Global{
-					Labels: labels,
-					Count:  0,
-				})
+				if len(m) != 0 {
+					tmp := make(map[string][]string)
+					for key := range m {
+						tmp[key] = m[key]
+					}
+					t = addCustomField(t, labels, tmp)
+				}
 			}
 		}
 	}
 
-	fmt.Println("Debug: ", t)
 	return t
 }
 
@@ -102,7 +139,7 @@ func GetGlobal(gs *[]Global, labels map[string]string) (*Global, int, error) {
 		}
 	}
 
-	return nil, -1, errors.New("Global not found")
+	return nil, -1, fmt.Errorf("Global not found: %s", labels)
 }
 
 //ResultTicket Stock result
@@ -115,10 +152,10 @@ type ResultTicket struct {
 }
 
 //NewResultTicket Create new ResultTicket
-func NewResultTicket() *ResultTicket {
+func NewResultTicket(m map[string][]string) *ResultTicket {
 	return &ResultTicket{
 		count:    0,
-		global:   getEmptyGlobal(),
+		global:   getEmptyGlobalWithCustomField(m),
 		priority: getEmptyPriority(),
 		status:   getEmptyStatus(),
 		via:      getEmptyVia(),
