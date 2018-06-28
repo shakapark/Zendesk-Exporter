@@ -117,8 +117,13 @@ func (c *Client) getTickets(allTicketField []TicketField) ([]ticket, error) {
 }
 
 //GetTicketStats Return statistics of all tickets in a map
-func (c *Client) GetTicketStats(allTicketField []TicketField, cfs config.CustomFields) (*ResultTicket, error) {
-	rt := NewResultTicket(cfs.Fields)
+func (c *Client) GetTicketStats(allTicketField []TicketField, cfs config.Filter) (*ResultTicket, error) {
+	var rt *ResultTicket
+	if cfs.CustomFields.Enable {
+		rt = NewResultTicket(cfs.CustomFields.Fields)
+	} else {
+		rt = NewResultTicket(map[string][]string{})
+	}
 
 	list, err := c.getTickets(allTicketField)
 	if err != nil {
@@ -137,48 +142,56 @@ func (c *Client) GetTicketStats(allTicketField []TicketField, cfs config.CustomF
 			t.Priority = "undefined"
 		}
 		//Set Global
-		m := map[string]string{
-			"priority": t.Priority,
-			"status":   t.Status,
-			"via":      t.Via.Channel,
-		}
-		if cfs.Enable {
-			for cf := range cfs.Fields {
-				for _, tmp := range t.CustomFields {
-					if tmp.Name == cf {
-						m[cf] = tmp.Value
+		if cfs.Global {
+			m := map[string]string{
+				"priority": t.Priority,
+				"status":   t.Status,
+				"via":      t.Via.Channel,
+			}
+			if cfs.CustomFields.Enable {
+				for cf := range cfs.CustomFields.Fields {
+					for _, tmp := range t.CustomFields {
+						if tmp.Name == cf {
+							m[cf] = tmp.Value
+						}
 					}
 				}
 			}
+			g, k, err := GetGlobal(global, m)
+			if err != nil {
+				return nil, err
+			}
+			g.Count++
+			(*global)[k] = *g
 		}
-		g, k, err := GetGlobal(global, m)
-		if err != nil {
-			return nil, err
-		}
-		g.Count++
-		(*global)[k] = *g
 
 		//Set Priority
-		if _, ok := priority[t.Priority]; ok {
-			priority[t.Priority]++
-		} else if t.Priority == "" {
-			priority["undefined"]++
-		} else {
-			return nil, errors.New("Error: " + t.Priority + " priority is not know")
+		if cfs.Priority {
+			if _, ok := priority[t.Priority]; ok {
+				priority[t.Priority]++
+			} else if t.Priority == "" {
+				priority["undefined"]++
+			} else {
+				return nil, errors.New("Error: " + t.Priority + " priority is not know")
+			}
 		}
 
 		//Set Status
-		if _, ok := status[t.Status]; ok {
-			status[t.Status]++
-		} else {
-			return nil, errors.New("Error: " + t.Status + " status is not know")
+		if cfs.Status {
+			if _, ok := status[t.Status]; ok {
+				status[t.Status]++
+			} else {
+				return nil, errors.New("Error: " + t.Status + " status is not know")
+			}
 		}
 
 		//Set Via
-		if _, ok := via[t.Via.Channel]; ok {
-			via[t.Via.Channel]++
-		} else {
-			return nil, errors.New("Error: " + t.Via.Channel + " channel is not know")
+		if cfs.Channel {
+			if _, ok := via[t.Via.Channel]; ok {
+				via[t.Via.Channel]++
+			} else {
+				return nil, errors.New("Error: " + t.Via.Channel + " channel is not know")
+			}
 		}
 	}
 

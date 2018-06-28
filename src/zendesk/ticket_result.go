@@ -84,6 +84,11 @@ func getEmptyGlobalWithCustomField(m map[string][]string) []Global {
 						tmp[key] = m[key]
 					}
 					t = addCustomField(t, labels, tmp)
+				} else {
+					t = append(t, Global{
+						Labels: labels,
+						Count:  0,
+					})
 				}
 			}
 		}

@@ -29,6 +29,7 @@ type Zendesk struct {
 
 //Filter Represent the filter use in this exporter
 type Filter struct {
+	Global       bool         `yaml:"global"`
 	Priority     bool         `yaml:"priority"`
 	Status       bool         `yaml:"status"`
 	Channel      bool         `yaml:"channel"`
