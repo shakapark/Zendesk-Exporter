@@ -7,7 +7,7 @@ import (
 var (
 	listPriority = []string{"urgent", "high", "normal", "low", "undefined"}
 	listStatus   = []string{"new", "open", "pending", "hold", "solved", "closed"}
-	listVia      = []string{"web", "mobile", "rule", "system", "twitter", "email"}
+	listVia      = []string{"web", "mobile", "rule", "system", "twitter", "email", "chat"}
 )
 
 func getEmptyGlobal() []Global {
