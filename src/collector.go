@@ -46,6 +46,7 @@ func (c collector) Collect(ch chan<- prometheus.Metric) {
 			} else {
 				cf = []reflect.Value{}
 			}
+			log.Debugln("Custom Field number:", len(cf))
 			switch len(cf) {
 			case 0:
 				ch <- prometheus.MustNewConstMetric(

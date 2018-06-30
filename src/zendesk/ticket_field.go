@@ -2,7 +2,7 @@ package zendesk
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"time"
 )
 
@@ -63,7 +63,7 @@ func getTicketFieldByID(id int64, atf []TicketField) (TicketField, error) {
 			return tf, nil
 		}
 	}
-	return TicketField{}, errors.New("Unknown ticketField id")
+	return TicketField{}, fmt.Errorf("%s", "Unknown ticketField id")
 }
 
 //SetAllTicketField Set all ticketField of zendesk
@@ -72,12 +72,12 @@ func (c *Client) SetAllTicketField() ([]TicketField, error) {
 
 	body, err := c.Get("/ticket_fields.json")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Can't get Zendesk API: %s", err)
 	}
 
 	err = json.Unmarshal(body, &tmp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Can't unmarshal API response: %s", err)
 	}
 
 	return tmp.TicketFields, nil

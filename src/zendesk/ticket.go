@@ -3,7 +3,7 @@ package zendesk
 import (
 	"Zendesk-Exporter/src/config"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"strconv"
 	"time"
 )
@@ -75,12 +75,12 @@ func (c *Client) getTickets(allTicketField []TicketField) ([]ticket, error) {
 	for {
 		body, err := c.Get("/tickets.json?page=" + strconv.Itoa(i))
 		if err != nil {
-			return []ticket{}, err
+			return []ticket{}, fmt.Errorf("Can't get Zendesk API: %s", err)
 		}
 
 		err = json.Unmarshal(body, &tickets)
 		if err != nil {
-			return []ticket{}, err
+			return []ticket{}, fmt.Errorf("Can't unmarshal API response: %s", err)
 		}
 
 		for _, t := range tickets.List {
@@ -89,7 +89,7 @@ func (c *Client) getTickets(allTicketField []TicketField) ([]ticket, error) {
 			for _, cf := range cfs {
 				tf, err := getTicketFieldByID(cf.ID, allTicketField)
 				if err != nil {
-					return []ticket{}, err
+					return []ticket{}, fmt.Errorf("Can't get TicketField: %s", err)
 				}
 				cf.Name = tf.Title
 				if cf.Value == "" {
@@ -127,7 +127,7 @@ func (c *Client) GetTicketStats(allTicketField []TicketField, cfs config.Filter)
 
 	list, err := c.getTickets(allTicketField)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Can't get ticket list: %s", err)
 	}
 
 	rt.SetCount(float64(len(list)))
@@ -141,6 +141,36 @@ func (c *Client) GetTicketStats(allTicketField []TicketField, cfs config.Filter)
 		if t.Priority == "" {
 			t.Priority = "undefined"
 		}
+
+		//Set Priority
+		if cfs.Priority {
+			if _, ok := priority[t.Priority]; ok {
+				priority[t.Priority]++
+			} else if t.Priority == "" {
+				priority["undefined"]++
+			} else {
+				return nil, fmt.Errorf("%s", "Error: "+t.Priority+" priority is not know")
+			}
+		}
+
+		//Set Status
+		if cfs.Status {
+			if _, ok := status[t.Status]; ok {
+				status[t.Status]++
+			} else {
+				return nil, fmt.Errorf("%s", "Error: "+t.Status+" status is not know")
+			}
+		}
+
+		//Set Via
+		if cfs.Channel {
+			if _, ok := via[t.Via.Channel]; ok {
+				via[t.Via.Channel]++
+			} else {
+				return nil, fmt.Errorf("%s", "Error: "+t.Via.Channel+" channel is not know")
+			}
+		}
+
 		//Set Global
 		if cfs.Global {
 			m := map[string]string{
@@ -159,39 +189,10 @@ func (c *Client) GetTicketStats(allTicketField []TicketField, cfs config.Filter)
 			}
 			g, k, err := GetGlobal(global, m)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("Can't get the Global map: %s", err)
 			}
 			g.Count++
 			(*global)[k] = *g
-		}
-
-		//Set Priority
-		if cfs.Priority {
-			if _, ok := priority[t.Priority]; ok {
-				priority[t.Priority]++
-			} else if t.Priority == "" {
-				priority["undefined"]++
-			} else {
-				return nil, errors.New("Error: " + t.Priority + " priority is not know")
-			}
-		}
-
-		//Set Status
-		if cfs.Status {
-			if _, ok := status[t.Status]; ok {
-				status[t.Status]++
-			} else {
-				return nil, errors.New("Error: " + t.Status + " status is not know")
-			}
-		}
-
-		//Set Via
-		if cfs.Channel {
-			if _, ok := via[t.Via.Channel]; ok {
-				via[t.Via.Channel]++
-			} else {
-				return nil, errors.New("Error: " + t.Via.Channel + " channel is not know")
-			}
 		}
 	}
 
